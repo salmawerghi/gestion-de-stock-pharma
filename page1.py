@@ -373,10 +373,10 @@ class GestionPharmaApp:
 
         # Menu Modules
         modules_menu = Menu(menu_bar, tearoff=0)
-        modules_menu.add_command(label="Achats")
-        modules_menu.add_command(label="Ventes")
-        modules_menu.add_command(label="Listing")
-        modules_menu.add_command(label="Factures")
+        modules_menu.add_command(label="Achats", command=self.open_achats_window)
+        modules_menu.add_command(label="Ventes", command=self.open_ventes_window)
+        modules_menu.add_command(label="Listing", command=self.open_listing_window)
+        modules_menu.add_command(label="Factures", command=self.open_factures_window)
         menu_bar.add_cascade(label="Modules", menu=modules_menu)
 
         # Autres menus
@@ -395,12 +395,33 @@ class GestionPharmaApp:
                         font=("Calibri", 32, "bold italic"), bg="#393FB8", fg="white")
         title.place(x=0, y=0, width=1200, height=60)
 
-
         # Bouton Déconnexion
         logout_btn = tk.Button(self.root, text="Déconnexion",
                              font=("Arial", 12), bg="#3a38c4", fg="white",
                              command=self.show_auth_page)
         logout_btn.place(relx=0.9, rely=0.9, anchor='center')
+
+    # ✅✅ ✅ CORRECTION : fonctions déplacées ici !
+    def open_ventes_window(self):
+        from ventes import VenteWindow
+        VenteWindow(self.root)
+
+    def open_achats_window(self):
+        try:
+            from achats import AchatsWindow
+            AchatsWindow(self.root)
+        except:
+            from ventes import VenteWindow
+            VenteWindow(self.root)
+    def open_listing_window(self):
+        from listing import ListingWindow
+        ListingWindow(self.root)
+
+    def open_factures_window(self):
+        from factures import FacturesWindow
+        FacturesWindow(self.root)
+    
+
 
 # ─────────────────────────────────────────────
 # ✅ LANCEMENT DE L'APPLICATION
