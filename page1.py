@@ -11,7 +11,7 @@ class GestionPharmaApp:
         self.root.title("GESTION PHARMACIE")
         self.root.geometry("1200x700")
         self.root.resizable(False, False)
-        
+        self.root.iconbitmap("img1.ico")
         # Créer la base de données
         self.create_database()
         
