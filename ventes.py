@@ -53,7 +53,7 @@ class VenteWindow:
                  fg="white", bg="#2c3e50").pack(fill='x')
 
         # ───────── SECTION CLIENT ─────────
-        client_frame = tk.LabelFrame(self.window, text="Client", bg="white", fg="#2c3e50",
+        client_frame = tk.LabelFrame(self.window, text="Client", bg="white", fg="#2c3e50", highlightbackground="#324A8A", highlightthickness=3,
                                      font=("Arial", 11, "bold"))
         client_frame.place(x=20, y=60, width=300, height=150)
 
@@ -70,7 +70,7 @@ class VenteWindow:
         self.client_contact.grid(row=2, column=1)
 
         # ───────── SECTION PRODUITS ─────────
-        produit_frame = tk.LabelFrame(self.window, text="Produits", bg="white", fg="#2c3e50", font=("Arial", 11, "bold"))
+        produit_frame = tk.LabelFrame(self.window, highlightbackground="#324A8A", highlightthickness=3, text="Produits", bg="white", fg="#2c3e50", font=("Arial", 11, "bold"))
         produit_frame.place(x=340, y=60, width=400, height=220)
 
         tk.Label(produit_frame, text="Type Médicament", bg="white").grid(row=0, column=0, padx=10, pady=8, sticky="w")
@@ -112,7 +112,7 @@ class VenteWindow:
                   width=18, command=self.reset_all).grid(row=1, column=1, padx=5, pady=8)
 
         # ───────── TOTALS ─────────
-        totaux_frame = tk.LabelFrame(self.window, text="TOTAUX", bg="white", fg="#c0392b",
+        totaux_frame = tk.LabelFrame(self.window, text="TOTAUX", bg="white", fg="#c0392b", highlightbackground="#324A8A", highlightthickness=3,
                                      font=("Arial", 11, "bold"))
         totaux_frame.place(x=20, y=220, width=300, height=150)
 
@@ -133,7 +133,7 @@ class VenteWindow:
         facture_frame.place(x=760, y=60, width=460, height=640)
 
         tk.Label(facture_frame, text="Facture", font=("Arial", 18, "bold"),
-                 fg="#4b49ca", bg="white").pack(pady=5)
+                 fg="#2c3e50", bg="white").pack(pady=5)
 
         tk.Label(facture_frame, text=".........................................................",
                  bg="white").pack()
@@ -184,7 +184,7 @@ class VenteWindow:
             tk.Label(facture_frame, text="[ IMAGE ]", bg="white").pack()
 
         # ───────── HISTORIQUE ─────────
-        hist_frame = tk.LabelFrame(self.window, text="Historique des Ventes", bg="white",
+        hist_frame = tk.LabelFrame(self.window, text="Historique des Ventes", bg="white", highlightbackground="#324A8A", highlightthickness=3,
                                    fg="#2c3e50", font=("Arial", 11, "bold"))
         hist_frame.place(x=20, y=380, width=720, height=320)
 
