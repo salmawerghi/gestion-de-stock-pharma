@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import sqlite3
+import pandas as pd
 from datetime import datetime
 from PIL import Image, ImageTk
 
@@ -11,7 +12,7 @@ class VenteWindow:
         self.window.title("Gestion des Ventes - Pharmacie")
         self.window.geometry("1250x720")
         self.window.configure(bg="#f0f2f5")
-        self.window.resizable(True, True)
+        self.window.resizable(False, False)
         self.cart_items = []
 
         with sqlite3.connect("pharma_users.db") as conn:
@@ -22,6 +23,7 @@ class VenteWindow:
                 pass
 
         self.create_table()
+        self.types = self.get_types()
         self.build_ui()
         self.afficher_ventes()
 
@@ -44,6 +46,14 @@ class VenteWindow:
         ''')
         conn.commit()
         conn.close()
+
+    def get_types(self):
+        conn = sqlite3.connect("pharma_users.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT type FROM medicaments")
+        types = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return types
 
     # ------------------------------------------------------------
     # UI
@@ -74,27 +84,25 @@ class VenteWindow:
         produit_frame.place(x=340, y=60, width=400, height=220)
 
         tk.Label(produit_frame, text="Type Médicament", bg="white").grid(row=0, column=0, padx=10, pady=8, sticky="w")
-        self.type_med = ttk.Combobox(produit_frame, values=["Comprimé", "Sirop", "Injection", "Pommade", "Gélule"], width=30, state="readonly")
+        self.type_med = ttk.Combobox(produit_frame, values=self.types, width=30, state="readonly")
+        self.type_med.bind("<<ComboboxSelected>>", self.update_medicaments)
         self.type_med.grid(row=0, column=1, padx=10, pady=8)
         self.type_med.set("Select")
 
-        tk.Label(produit_frame, text="Catégorie", bg="white").grid(row=1, column=0, padx=10, pady=8, sticky="w")
-        self.categorie = ttk.Combobox(produit_frame, values=["Antibiotique", "Antidouleur", "Vitamine", "Autre"], width=30, state="readonly")
-        self.categorie.grid(row=1, column=1, padx=10, pady=8)
-
-        tk.Label(produit_frame, text="Médicament", bg="white").grid(row=2, column=0, padx=10, pady=8, sticky="w")
+        tk.Label(produit_frame, text="Médicament", bg="white").grid(row=1, column=0, padx=10, pady=8, sticky="w")
         self.medicament = ttk.Combobox(produit_frame, width=30)
-        self.medicament.grid(row=2, column=1, padx=10, pady=8)
+        self.medicament.grid(row=1, column=1, padx=10, pady=8)
 
-        tk.Label(produit_frame, text="Prix (TND)", bg="white").grid(row=3, column=0, padx=10, pady=8, sticky="w")
+        tk.Label(produit_frame, text="Prix (TND)", bg="white").grid(row=2, column=0, padx=10, pady=8, sticky="w")
         self.prix = tk.Entry(produit_frame, width=30)
         self.prix.insert(0, "0")
-        self.prix.grid(row=3, column=1, padx=10, pady=8)
+        self.prix.grid(row=2, column=1, padx=10, pady=8)
 
-        tk.Label(produit_frame, text="Quantité", bg="white").grid(row=4, column=0, padx=10, pady=8, sticky="w")
+        tk.Label(produit_frame, text="Quantité", bg="white").grid(row=3, column=0, padx=10, pady=8, sticky="w")
         self.quantite = tk.Entry(produit_frame, width=30)
         self.quantite.insert(0, "0")
-        self.quantite.grid(row=4, column=1, padx=10,pady=8)
+        self.quantite.grid(row=3, column=1, padx=10, pady=8)
+
         # ───────── BOUTONS ─────────
         btn_frame = tk.Frame(self.window, bg="#f0f2f5")
         btn_frame.place(x=340, y=290, width=400, height=150)
@@ -200,21 +208,56 @@ class VenteWindow:
     # FUNCTIONS
     # ------------------------------------------------------------
     def add_to_cart(self):
-        med = self.medicament.get()
-        qte = self.quantite.get()
-        prix = self.prix.get()
+        med = self.medicament.get()  # Get selected medication
+        qte = self.quantite.get()    # Get the quantity to be purchased
+        prix = self.prix.get()       # Get the price of the medication
+
         if not med or qte == "0" or prix == "0":
             messagebox.showwarning("Attention", "Remplissez tous les champs")
             return
+
         try:
-            self.cart_items.append({
-                "produit": med,
-                "quantite": float(qte),
-                "prix": float(prix)
-            })
-            messagebox.showinfo("Succès", f"{med} ajouté ✅")
-        except:
-            messagebox.showerror("Erreur", "Valeurs invalides")
+            # Convert quantity to integer and price to float
+            quantity = int(qte)
+            price = float(prix)
+
+            # Fetch the current stock quantity of the selected medication
+            conn = sqlite3.connect("pharma_users.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT quantite FROM medicaments WHERE nom=?", (med,))
+            result = cursor.fetchone()
+            if result:
+                current_quantity = result[0]
+
+                # Check if enough stock is available
+                if quantity > current_quantity:
+                    messagebox.showwarning("Attention", "Quantité demandée supérieure à la stock disponible.")
+                    conn.close()
+                    return
+
+                # Add the medication to the cart
+                self.cart_items.append({
+                    "produit": med,
+                    "quantite": quantity,
+                    "prix": price
+                })
+
+                # Decrease the quantity in the database
+                new_quantity = current_quantity - quantity
+                cursor.execute("UPDATE medicaments SET quantite=? WHERE nom=?", (new_quantity, med))
+                conn.commit()
+
+                messagebox.showinfo("Succès", f"{med} ajouté au panier ✅")
+
+                # Optionally update the "Médicament" combobox to reflect the updated stock
+                self.update_medicaments(None)  # Refresh the medication list to reflect the stock change
+
+            else:
+                messagebox.showwarning("Erreur", "Médicament non trouvé.")
+
+            conn.close()
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur d'ajout au panier: {e}")
 
     def facturer(self):
         if not self.cart_items:
@@ -310,3 +353,38 @@ class VenteWindow:
             field.delete(0, tk.END)
             field.config(state="readonly")
         self.lbl_total_facture.config(text="0.000 TND")
+
+    # Update the medications based on the selected type
+    def update_medicaments(self, event=None):
+        # Get the selected type of medication from the combo box
+        med_type = self.type_med.get()
+
+        # Fetch medications based on the selected type from the database using Pandas
+        conn = sqlite3.connect("pharma_users.db")
+        query = f"SELECT nom FROM medicaments WHERE type='{med_type}'"
+        medicaments_df = pd.read_sql_query(query, conn)
+        conn.close()
+
+        # Update the "Médicament" combobox with the filtered medications
+        self.medicament['values'] = medicaments_df['nom'].tolist()
+        self.medicament.set("")  # Reset the selection
+
+        # Update the "Médicament" combobox when a selection is made
+        self.medicament.bind("<<ComboboxSelected>>", self.update_price)
+
+    def update_price(self, event):
+        # Get the selected medication from the combobox
+        selected_med = self.medicament.get()
+
+        # Fetch the price of the selected medication from the database
+        conn = sqlite3.connect("pharma_users.db")
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT prix FROM medicaments WHERE nom=?", (selected_med,))
+        result = cursor.fetchone()
+        conn.close()
+
+        if result:
+            # Update the "Prix" field with the price of the selected medication
+            self.prix.delete(0, tk.END)
+            self.prix.insert(0, str(result[0]))

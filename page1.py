@@ -316,7 +316,7 @@ class GestionPharmaApp:
         modules_menu.add_command(label="Achats", command=self.open_achats_window)
         modules_menu.add_command(label="Ventes", command=self.open_ventes_window)
         modules_menu.add_command(label="Listing", command=self.open_listing_window)
-        modules_menu.add_command(label="Factures", command=self.open_factures_window)
+        modules_menu.add_command(label="Statistiques", command=self.open_statistiques_window)
         menu_bar.add_cascade(label="Modules", menu=modules_menu)
 
         self.root.config(menu=menu_bar)
@@ -342,9 +342,9 @@ class GestionPharmaApp:
         from listing import ListingWindow
         ListingWindow(self.root)
 
-    def open_factures_window(self):
-        from factures import FacturesWindow
-        FacturesWindow(self.root)
+    def open_statistiques_window(self):
+        from statistiques import StatistiquesWindow
+        StatistiquesWindow(self.root)
 
 
 # Lancement
